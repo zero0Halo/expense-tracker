@@ -1,12 +1,15 @@
-import { useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { transactionSchema, type TransactionSchemaType } from '../../schemas/transactionSchema';
-import { useTransactionStore } from '../../stores/transactionStore';
-import { useCategoryStore } from '../../stores/categoryStore';
-import { getCurrentDate } from '../../utils/formatters';
-import { Button, Input, Select, Modal } from '../ui';
-import type { Transaction } from '../../types';
+import { useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  transactionSchema,
+  type TransactionSchemaType,
+} from "../../schemas/transactionSchema";
+import { useTransactionStore } from "../../stores/transactionStore";
+import { useCategoryStore } from "../../stores/categoryStore";
+import { getCurrentDate } from "../../utils/formatters";
+import { Button, Input, Select, Modal } from "../ui";
+import type { Transaction } from "../../types";
 
 interface TransactionFormProps {
   isOpen: boolean;
@@ -20,8 +23,12 @@ export default function TransactionForm({
   editTransaction,
 }: TransactionFormProps) {
   const addTransaction = useTransactionStore((state) => state.addTransaction);
-  const updateTransaction = useTransactionStore((state) => state.updateTransaction);
-  const getCategoriesByType = useCategoryStore((state) => state.getCategoriesByType);
+  const updateTransaction = useTransactionStore(
+    (state) => state.updateTransaction,
+  );
+  const getCategoriesByType = useCategoryStore(
+    (state) => state.getCategoriesByType,
+  );
 
   const {
     register,
@@ -33,15 +40,15 @@ export default function TransactionForm({
   } = useForm<TransactionSchemaType>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
-      type: 'expense',
+      type: "expense",
       amount: undefined,
-      category: '',
-      description: '',
+      category: "",
+      description: "",
       date: getCurrentDate(),
     },
   });
 
-  const selectedType = watch('type');
+  const selectedType = watch("type");
   const categories = getCategoriesByType(selectedType);
 
   // Reset form when opening/closing or editing
@@ -57,10 +64,10 @@ export default function TransactionForm({
         });
       } else {
         reset({
-          type: 'expense',
+          type: "expense",
           amount: undefined,
-          category: '',
-          description: '',
+          category: "",
+          description: "",
           date: getCurrentDate(),
         });
       }
@@ -70,7 +77,7 @@ export default function TransactionForm({
   const onSubmit = (data: TransactionSchemaType) => {
     if (editTransaction) {
       updateTransaction(editTransaction.id, data);
-    } else {
+    } else if (!isSubmitting) {
       addTransaction(data);
     }
     onClose();
@@ -80,7 +87,7 @@ export default function TransactionForm({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={editTransaction ? 'Edit Transaction' : 'New Transaction'}
+      title={editTransaction ? "Edit Transaction" : "New Transaction"}
       size="md"
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -93,13 +100,13 @@ export default function TransactionForm({
               <>
                 <button
                   type="button"
-                  onClick={() => field.onChange('expense')}
+                  onClick={() => field.onChange("expense")}
                   className={`
                     flex-1 py-2.5 px-4 rounded-lg font-medium transition-all duration-200
                     ${
-                      field.value === 'expense'
-                        ? 'bg-danger-500 text-white'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      field.value === "expense"
+                        ? "bg-danger-500 text-white"
+                        : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
                     }
                   `}
                 >
@@ -107,13 +114,13 @@ export default function TransactionForm({
                 </button>
                 <button
                   type="button"
-                  onClick={() => field.onChange('income')}
+                  onClick={() => field.onChange("income")}
                   className={`
                     flex-1 py-2.5 px-4 rounded-lg font-medium transition-all duration-200
                     ${
-                      field.value === 'income'
-                        ? 'bg-primary-500 text-white'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      field.value === "income"
+                        ? "bg-primary-500 text-white"
+                        : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
                     }
                   `}
                 >
@@ -137,10 +144,10 @@ export default function TransactionForm({
               min="0"
               error={errors.amount?.message}
               {...field}
-              value={field.value ?? ''}
+              value={field.value ?? ""}
               onChange={(e) => {
                 const value = e.target.value;
-                field.onChange(value === '' ? undefined : parseFloat(value));
+                field.onChange(value === "" ? undefined : parseFloat(value));
               }}
             />
           )}
@@ -154,7 +161,7 @@ export default function TransactionForm({
             label: cat.name,
           }))}
           error={errors.category?.message}
-          {...register('category')}
+          {...register("category")}
         />
 
         {/* Date */}
@@ -162,7 +169,7 @@ export default function TransactionForm({
           type="date"
           label="Date"
           error={errors.date?.message}
-          {...register('date')}
+          {...register("date")}
         />
 
         {/* Description */}
@@ -171,7 +178,7 @@ export default function TransactionForm({
           label="Description (Optional)"
           placeholder="Transaction description..."
           error={errors.description?.message}
-          {...register('description')}
+          {...register("description")}
         />
 
         {/* Actions */}
@@ -186,11 +193,11 @@ export default function TransactionForm({
           </Button>
           <Button
             type="submit"
-            variant={selectedType === 'income' ? 'primary' : 'danger'}
+            variant={selectedType === "income" ? "primary" : "danger"}
             className="flex-1"
             isLoading={isSubmitting}
           >
-            {editTransaction ? 'Update' : 'Add'}
+            {editTransaction ? "Update" : "Add"}
           </Button>
         </div>
       </form>
