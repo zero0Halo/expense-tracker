@@ -1,19 +1,55 @@
-import { useState } from 'react';
-import { Plus, Download } from 'lucide-react';
-import { useTransactionStore } from '../stores/transactionStore';
-import { useFilterStore } from '../stores/filterStore';
-import { exportTransactionsToCSV } from '../utils/exportCSV';
-import { formatCurrency } from '../utils/formatters';
-import Card, { CardHeader } from '../components/ui/Card';
-import Button from '../components/ui/Button';
-import { TransactionForm, TransactionList } from '../components/transactions';
-import { FilterBar } from '../components/filters';
+import { useState } from "react";
+import { Plus, Download } from "lucide-react";
+import { useTransactionStore } from "../stores/transactionStore";
+import { useFilterStore } from "../stores/filterStore";
+import { exportTransactionsToCSV } from "../utils/exportCSV";
+import { formatCurrency } from "../utils/formatters";
+import Card, { CardHeader } from "../components/ui/Card";
+import Button from "../components/ui/Button";
+import { TransactionForm, TransactionList } from "../components/transactions";
+import { FilterBar } from "../components/filters";
+import Select from "../components/ui/Select";
+import { Transaction } from "@/types";
+
+const NEWEST = "newest";
+const HIGH_TO_LOW = "high-to-low";
+const LOW_TO_HIGH = "low-to-high";
+
+type SortOptions = typeof NEWEST | typeof HIGH_TO_LOW | typeof LOW_TO_HIGH;
+
+const sortByOptions = [
+  {
+    label: "Newest first",
+    value: NEWEST,
+  },
+  {
+    label: "Amount: High to Low",
+    value: HIGH_TO_LOW,
+  },
+  {
+    label: "Amount: Low to High",
+    value: LOW_TO_HIGH,
+  },
+];
+
+const sortByOperations = {
+  [NEWEST]: (transactions: Transaction[]) => transactions,
+  [HIGH_TO_LOW]: (transactions: Transaction[]) =>
+    transactions.sort((a, b) => b.amount - a.amount),
+  [LOW_TO_HIGH]: (transactions: Transaction[]) =>
+    transactions.sort((a, b) => a.amount - b.amount),
+};
 
 export default function Transactions() {
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<SortOptions>(NEWEST);
 
-  const getFilteredTransactions = useTransactionStore((state) => state.getFilteredTransactions);
-  const deleteTransaction = useTransactionStore((state) => state.deleteTransaction);
+  const getFilteredTransactions = useTransactionStore(
+    (state) => state.getFilteredTransactions,
+  );
+  const deleteTransaction = useTransactionStore(
+    (state) => state.deleteTransaction,
+  );
   const getSummary = useTransactionStore((state) => state.getSummary);
   const filters = useFilterStore((state) => state.filters);
 
@@ -24,12 +60,16 @@ export default function Transactions() {
     exportTransactionsToCSV(filteredTransactions);
   };
 
+  const sortedTransactions = sortByOperations[sortBy](filteredTransactions);
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Transactions</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Transactions
+          </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
             Manage all your income and expenses
           </p>
@@ -62,20 +102,28 @@ export default function Transactions() {
       {/* Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-primary-50 dark:bg-primary-900/20 rounded-xl p-4">
-          <p className="text-sm text-primary-600 dark:text-primary-400">Filtered Income</p>
+          <p className="text-sm text-primary-600 dark:text-primary-400">
+            Filtered Income
+          </p>
           <p className="text-xl font-bold text-primary-700 dark:text-primary-300">
             +{formatCurrency(summary.totalIncome)}
           </p>
         </div>
         <div className="bg-danger-50 dark:bg-danger-900/20 rounded-xl p-4">
-          <p className="text-sm text-danger-600 dark:text-danger-400">Filtered Expense</p>
+          <p className="text-sm text-danger-600 dark:text-danger-400">
+            Filtered Expense
+          </p>
           <p className="text-xl font-bold text-danger-700 dark:text-danger-300">
             -{formatCurrency(summary.totalExpense)}
           </p>
         </div>
         <div className="bg-gray-100 dark:bg-gray-800 rounded-xl p-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400">Net Balance</p>
-          <p className={`text-xl font-bold ${summary.balance >= 0 ? 'text-primary-600 dark:text-primary-400' : 'text-danger-600 dark:text-danger-400'}`}>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Net Balance
+          </p>
+          <p
+            className={`text-xl font-bold ${summary.balance >= 0 ? "text-primary-600 dark:text-primary-400" : "text-danger-600 dark:text-danger-400"}`}
+          >
             {formatCurrency(summary.balance)}
           </p>
         </div>
@@ -85,17 +133,26 @@ export default function Transactions() {
       <Card>
         <CardHeader
           title={`Transaction List (${filteredTransactions.length})`}
-          subtitle="All your transactions sorted by date"
         />
+
+        <Select
+          placeholder="Sort By..."
+          options={sortByOptions}
+          onChange={(e) => setSortBy(e.target.value as SortOptions)}
+        />
+
         <TransactionList
-          transactions={filteredTransactions}
+          transactions={sortedTransactions}
           onDelete={deleteTransaction}
           emptyMessage="No transactions match the filters"
         />
       </Card>
 
       {/* Transaction Form Modal */}
-      <TransactionForm isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} />
+      <TransactionForm
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+      />
     </div>
   );
 }
