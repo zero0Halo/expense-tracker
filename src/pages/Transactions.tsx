@@ -143,6 +143,7 @@ export default function Transactions() {
           placeholder="Sort By..."
           options={sortByOptions}
           onChange={(e) => setSortBy(e.target.value as SortOptions)}
+          value={sortBy}
         />
 
         <TransactionList
