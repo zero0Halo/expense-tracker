@@ -34,10 +34,14 @@ const sortByOptions = [
 
 const sortByOperations = {
   [NEWEST]: (transactions: Transaction[]) => transactions,
-  [HIGH_TO_LOW]: (transactions: Transaction[]) =>
-    transactions.sort((a, b) => b.amount - a.amount),
-  [LOW_TO_HIGH]: (transactions: Transaction[]) =>
-    transactions.sort((a, b) => a.amount - b.amount),
+  [HIGH_TO_LOW]: (transactions: Transaction[]) => {
+    const tmp = transactions.map((t) => ({ ...t }));
+    return tmp.sort((a, b) => b.amount - a.amount);
+  },
+  [LOW_TO_HIGH]: (transactions: Transaction[]) => {
+    const tmp = transactions.map((t) => ({ ...t }));
+    return tmp.sort((a, b) => a.amount - b.amount);
+  },
 };
 
 export default function Transactions() {
