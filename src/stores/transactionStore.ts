@@ -1,25 +1,35 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { v4 as uuidv4 } from 'uuid';
-import { parseISO, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
-import type { Transaction, TransactionFormData, FilterState, TransactionSummary, CategoryChartData, MonthlyChartData } from '../types';
-import { getCurrentISOString } from '../utils/formatters';
-import { useCategoryStore } from './categoryStore';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { v4 as uuidv4 } from "uuid";
+import { parseISO, isWithinInterval, startOfDay, endOfDay } from "date-fns";
+import type {
+  Transaction,
+  TransactionFormData,
+  FilterState,
+  TransactionSummary,
+  CategoryChartData,
+  MonthlyChartData,
+} from "../types";
+import { getCurrentISOString } from "../utils/formatters";
+import { useCategoryStore } from "./categoryStore";
 
 interface TransactionStore {
   transactions: Transaction[];
-  
+
   // Actions
   addTransaction: (data: TransactionFormData) => void;
   updateTransaction: (id: string, data: Partial<TransactionFormData>) => void;
   deleteTransaction: (id: string) => void;
   clearAllTransactions: () => void;
-  
+
   // Selectors
   getFilteredTransactions: (filters: FilterState) => Transaction[];
   getSummary: (transactions?: Transaction[]) => TransactionSummary;
   getRecentTransactions: (limit?: number) => Transaction[];
-  getCategoryChartData: (type: 'income' | 'expense', transactions?: Transaction[]) => CategoryChartData[];
+  getCategoryChartData: (
+    type: "income" | "expense",
+    transactions?: Transaction[],
+  ) => CategoryChartData[];
   getMonthlyChartData: (transactions?: Transaction[]) => MonthlyChartData[];
 }
 
@@ -42,7 +52,7 @@ export const useTransactionStore = create<TransactionStore>()(
       updateTransaction: (id, data) => {
         set((state) => ({
           transactions: state.transactions.map((t) =>
-            t.id === id ? { ...t, ...data } : t
+            t.id === id ? { ...t, ...data } : t,
           ),
         }));
       },
@@ -59,10 +69,10 @@ export const useTransactionStore = create<TransactionStore>()(
 
       getFilteredTransactions: (filters) => {
         const { transactions } = get();
-        
+
         return transactions.filter((t) => {
           // Filter by type
-          if (filters.type !== 'all' && t.type !== filters.type) {
+          if (filters.type !== "all" && t.type !== filters.type) {
             return false;
           }
 
@@ -76,7 +86,7 @@ export const useTransactionStore = create<TransactionStore>()(
             const transactionDate = parseISO(t.date);
             const start = startOfDay(parseISO(filters.dateRange.start));
             const end = endOfDay(parseISO(filters.dateRange.end));
-            
+
             if (!isWithinInterval(transactionDate, { start, end })) {
               return false;
             }
@@ -85,10 +95,22 @@ export const useTransactionStore = create<TransactionStore>()(
           // Filter by search query
           if (filters.searchQuery) {
             const query = filters.searchQuery.toLowerCase();
-            const matchesDescription = t.description.toLowerCase().includes(query);
+            const matchesDescription = t.description
+              .toLowerCase()
+              .includes(query);
             const matchesCategory = t.category.toLowerCase().includes(query);
-            
+
             if (!matchesDescription && !matchesCategory) {
+              return false;
+            }
+          }
+
+          // Filter by search query
+          if (filters.minimum) {
+            const minimum = parseFloat(filters.minimum);
+            const amount = t.type === "expense" ? t.amount * -1 : t.amount;
+
+            if (typeof minimum !== "number" || amount < minimum) {
               return false;
             }
           }
@@ -99,13 +121,13 @@ export const useTransactionStore = create<TransactionStore>()(
 
       getSummary: (transactionsInput) => {
         const transactions = transactionsInput ?? get().transactions;
-        
+
         const totalIncome = transactions
-          .filter((t) => t.type === 'income')
+          .filter((t) => t.type === "income")
           .reduce((sum, t) => sum + t.amount, 0);
-        
+
         const totalExpense = transactions
-          .filter((t) => t.type === 'expense')
+          .filter((t) => t.type === "expense")
           .reduce((sum, t) => sum + t.amount, 0);
 
         return {
@@ -118,21 +140,28 @@ export const useTransactionStore = create<TransactionStore>()(
       getRecentTransactions: (limit = 5) => {
         const { transactions } = get();
         return [...transactions]
-          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+          .sort(
+            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+          )
           .slice(0, limit);
       },
 
       getCategoryChartData: (type, transactionsInput) => {
         const transactions = transactionsInput ?? get().transactions;
         const categoryStore = useCategoryStore.getState();
-        
-        const filteredTransactions = transactions.filter((t) => t.type === type);
-        
+
+        const filteredTransactions = transactions.filter(
+          (t) => t.type === type,
+        );
+
         // Group by category
-        const categoryTotals = filteredTransactions.reduce((acc, t) => {
-          acc[t.category] = (acc[t.category] || 0) + t.amount;
-          return acc;
-        }, {} as Record<string, number>);
+        const categoryTotals = filteredTransactions.reduce(
+          (acc, t) => {
+            acc[t.category] = (acc[t.category] || 0) + t.amount;
+            return acc;
+          },
+          {} as Record<string, number>,
+        );
 
         // Map to chart data
         return Object.entries(categoryTotals).map(([categoryId, value]) => {
@@ -140,30 +169,33 @@ export const useTransactionStore = create<TransactionStore>()(
           return {
             name: category?.name || categoryId,
             value,
-            color: category?.color || '#6b7280',
+            color: category?.color || "#6b7280",
           };
         });
       },
 
       getMonthlyChartData: (transactionsInput) => {
         const transactions = transactionsInput ?? get().transactions;
-        
+
         // Group by month (YYYY-MM)
-        const monthlyData = transactions.reduce((acc, t) => {
-          const month = t.date.slice(0, 7); // YYYY-MM
-          
-          if (!acc[month]) {
-            acc[month] = { income: 0, expense: 0 };
-          }
-          
-          if (t.type === 'income') {
-            acc[month].income += t.amount;
-          } else {
-            acc[month].expense += t.amount;
-          }
-          
-          return acc;
-        }, {} as Record<string, { income: number; expense: number }>);
+        const monthlyData = transactions.reduce(
+          (acc, t) => {
+            const month = t.date.slice(0, 7); // YYYY-MM
+
+            if (!acc[month]) {
+              acc[month] = { income: 0, expense: 0 };
+            }
+
+            if (t.type === "income") {
+              acc[month].income += t.amount;
+            } else {
+              acc[month].expense += t.amount;
+            }
+
+            return acc;
+          },
+          {} as Record<string, { income: number; expense: number }>,
+        );
 
         // Convert to array and sort by month
         return Object.entries(monthlyData)
@@ -176,7 +208,7 @@ export const useTransactionStore = create<TransactionStore>()(
       },
     }),
     {
-      name: 'expense-tracker-transactions',
-    }
-  )
+      name: "expense-tracker-transactions",
+    },
+  ),
 );

@@ -1,11 +1,12 @@
-import { Search, X, Calendar } from 'lucide-react';
-import { useFilterStore } from '../../stores/filterStore';
-import { useCategoryStore } from '../../stores/categoryStore';
-import { Button, Input, Select } from '../ui';
+import { Search, X, Calendar } from "lucide-react";
+import { useFilterStore } from "../../stores/filterStore";
+import { useCategoryStore } from "../../stores/categoryStore";
+import { Button, Input, Select } from "../ui";
 
 interface FilterBarProps {
   showTypeFilter?: boolean;
   showCategoryFilter?: boolean;
+  showMinimumFilter?: boolean;
   showDateFilter?: boolean;
   showSearchFilter?: boolean;
 }
@@ -13,30 +14,40 @@ interface FilterBarProps {
 export default function FilterBar({
   showTypeFilter = true,
   showCategoryFilter = true,
+  showMinimumFilter = true,
   showDateFilter = true,
   showSearchFilter = true,
 }: FilterBarProps) {
-  const { filters, setType, setCategory, setDateRange, clearDateRange, setSearchQuery, resetFilters } =
-    useFilterStore();
+  const {
+    filters,
+    setType,
+    setCategory,
+    setMinimum,
+    setDateRange,
+    clearDateRange,
+    setSearchQuery,
+    resetFilters,
+  } = useFilterStore();
   const categories = useCategoryStore((state) => state.categories);
 
   const hasActiveFilters =
-    filters.type !== 'all' ||
+    filters.type !== "all" ||
     filters.category !== null ||
+    filters.minimum !== null ||
     filters.dateRange !== null ||
-    filters.searchQuery !== '';
+    filters.searchQuery !== "";
 
   const typeOptions = [
-    { value: 'all', label: 'All' },
-    { value: 'income', label: 'Income' },
-    { value: 'expense', label: 'Expense' },
+    { value: "all", label: "All" },
+    { value: "income", label: "Income" },
+    { value: "expense", label: "Expense" },
   ];
 
   const categoryOptions = [
-    { value: '', label: 'All Categories' },
+    { value: "", label: "All Categories" },
     ...categories.map((cat) => ({
       value: cat.id,
-      label: `${cat.name} (${cat.type === 'income' ? 'Income' : 'Expense'})`,
+      label: `${cat.name} (${cat.type === "income" ? "Income" : "Expense"})`,
     })),
   ];
 
@@ -55,7 +66,7 @@ export default function FilterBar({
               rightIcon={
                 filters.searchQuery ? (
                   <button
-                    onClick={() => setSearchQuery('')}
+                    onClick={() => setSearchQuery("")}
                     className="hover:text-gray-600 dark:hover:text-gray-300"
                   >
                     <X className="w-4 h-4" />
@@ -72,7 +83,9 @@ export default function FilterBar({
             <Select
               options={typeOptions}
               value={filters.type}
-              onChange={(e) => setType(e.target.value as 'all' | 'income' | 'expense')}
+              onChange={(e) =>
+                setType(e.target.value as "all" | "income" | "expense")
+              }
               placeholder="Type"
             />
           </div>
@@ -83,9 +96,32 @@ export default function FilterBar({
           <div className="w-full sm:w-auto min-w-[180px]">
             <Select
               options={categoryOptions}
-              value={filters.category || ''}
+              value={filters.category || ""}
               onChange={(e) => setCategory(e.target.value || null)}
               placeholder="Category"
+            />
+          </div>
+        )}
+
+        {/* Category Filter */}
+        {showMinimumFilter && (
+          <div className="w-full sm:w-auto min-w-[180px]">
+            <Input
+              type="text"
+              placeholder="Minimum"
+              value={filters.minimum}
+              onChange={(e) => setMinimum(e.target.value)}
+              // leftIcon={<Search className="w-4 h-4" />}
+              rightIcon={
+                filters.minimum ? (
+                  <button
+                    onClick={() => setMinimum("")}
+                    className="hover:text-gray-600 dark:hover:text-gray-300"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                ) : undefined
+              }
             />
           </div>
         )}
@@ -98,7 +134,7 @@ export default function FilterBar({
           <div className="flex items-center gap-2">
             <Input
               type="date"
-              value={filters.dateRange?.start || ''}
+              value={filters.dateRange?.start || ""}
               onChange={(e) => {
                 const start = e.target.value;
                 const end = filters.dateRange?.end || start;
@@ -113,7 +149,7 @@ export default function FilterBar({
             <span className="text-gray-500">-</span>
             <Input
               type="date"
-              value={filters.dateRange?.end || ''}
+              value={filters.dateRange?.end || ""}
               onChange={(e) => {
                 const end = e.target.value;
                 const start = filters.dateRange?.start || end;

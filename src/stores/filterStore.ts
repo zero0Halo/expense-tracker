@@ -1,23 +1,25 @@
-import { create } from 'zustand';
-import type { FilterState } from '../types';
+import { create } from "zustand";
+import type { FilterState } from "../types";
 
 interface FilterStore {
   filters: FilterState;
-  
+
   // Actions
   setDateRange: (start: string, end: string) => void;
   clearDateRange: () => void;
-  setType: (type: 'all' | 'income' | 'expense') => void;
+  setType: (type: "all" | "income" | "expense") => void;
   setCategory: (category: string | null) => void;
+  setMinimum: (minimum: string) => void;
   setSearchQuery: (query: string) => void;
   resetFilters: () => void;
 }
 
 const DEFAULT_FILTERS: FilterState = {
   dateRange: null,
-  type: 'all',
+  type: "all",
   category: null,
-  searchQuery: '',
+  minimum: "",
+  searchQuery: "",
 };
 
 export const useFilterStore = create<FilterStore>((set) => ({
@@ -55,6 +57,15 @@ export const useFilterStore = create<FilterStore>((set) => ({
       filters: {
         ...state.filters,
         category,
+      },
+    }));
+  },
+
+  setMinimum: (minimum) => {
+    set((state) => ({
+      filters: {
+        ...state.filters,
+        minimum,
       },
     }));
   },

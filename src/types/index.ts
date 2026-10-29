@@ -3,7 +3,7 @@
  */
 export interface Transaction {
   id: string;
-  type: 'income' | 'expense';
+  type: "income" | "expense";
   amount: number;
   category: string;
   description: string;
@@ -17,7 +17,7 @@ export interface Transaction {
 export interface Category {
   id: string;
   name: string;
-  type: 'income' | 'expense';
+  type: "income" | "expense";
   color: string;
   icon: string;
 }
@@ -30,8 +30,9 @@ export interface FilterState {
     start: string;
     end: string;
   } | null;
-  type: 'all' | 'income' | 'expense';
+  type: "all" | "income" | "expense";
   category: string | null;
+  minimum: string;
   searchQuery: string;
 }
 
@@ -39,7 +40,7 @@ export interface FilterState {
  * Form data for creating/editing transactions
  */
 export interface TransactionFormData {
-  type: 'income' | 'expense';
+  type: "income" | "expense";
   amount: number;
   category: string;
   description: string;
