@@ -48,6 +48,10 @@ export default function Transactions() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [sortBy, setSortBy] = useState<SortOptions>(NEWEST);
 
+  const numberOfTransactions = useTransactionStore(
+    (state) => state.transactions.length,
+  );
+
   const getFilteredTransactions = useTransactionStore(
     (state) => state.getFilteredTransactions,
   );
@@ -136,7 +140,7 @@ export default function Transactions() {
       {/* Transaction List */}
       <Card>
         <CardHeader
-          title={`Transaction List (${filteredTransactions.length})`}
+          title={`Showing ${filteredTransactions.length} of ${numberOfTransactions} transactions`}
         />
 
         <Select
